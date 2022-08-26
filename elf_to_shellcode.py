@@ -1,4 +1,5 @@
 from elftools.elf.elffile import ELFFile
+from assembler import nasm
 from functools import reduce
 import operator
 import io
@@ -27,8 +28,9 @@ class Mapper():
 		self.flags[start:start+len(data)] = [flags] * len(data)
 
 		# pad up to page boundary
-		self.mem += bytearray(-len(self.mem) % self.align)
-		self.flags += [0] * (-len(self.mem) % self.align)
+		pad_len = -len(self.mem) % self.align
+		self.mem += bytearray(pad_len)
+		self.flags += [0] * (pad_len)
 	
 	def get_page_maps(self): # returns iterator of (start, length, perms)
 		map_start = 0
@@ -189,13 +191,7 @@ incbin "{image_file.name}"
 		print()
 		print(asm_source.getvalue())
 
-	asm_source_file = tempfile.NamedTemporaryFile("w+")
-	asm_source_file.write(asm_source.getvalue())
-	asm_source_file.flush()
-
-	out_file = tempfile.NamedTemporaryFile("rb+")
-	os.system(f"nasm {asm_source_file.name} -o {out_file.name}")
-	shellcode_out_file.write(out_file.read())
+	shellcode_out_file.write(nasm(asm_source.getvalue()))
 
 	# useful for testing
 	#os.system(f"nasm {asm_source_file.name} -f elf64 -o shellcode.o && gcc shellcode.o -o shellcode.elf -nostdlib -static-pie")

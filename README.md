@@ -2,7 +2,7 @@
 A stealthy ELF loader - no files, no execve, no RWX
 
 This implementation currently relies on some hand-written x86-64 shellcode, but the
-general technique should be applicable cross-architecture.
+general approach should be applicable cross-architecture.
 
 The current implementation only works `static-pie` ELFs.
 It should also be possible to work with non-pie static ELFs, but dynamic ELFs are out of scope for this project.
