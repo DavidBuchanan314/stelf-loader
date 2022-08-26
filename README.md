@@ -1,6 +1,12 @@
 # stelf-loader
 A stealthy ELF loader - no files, no execve, no RWX
 
+Here's a simple "hello world" ELF (`test_elfs/syscall-static-pie.c`), packed using stelf-loader:
+
+```bash
+bash -c 'read a</proc/self/syscall;exec 3>/proc/self/mem 4< <(echo H4sIAElPCWMC/+3bz2vTYBgH8Ddts83Wrj1UqExmBA8K0623ge5H0c4IMuakNyeOrmJLYbJ2/kLRkxjK2MQ/QC+iN3cRxoZbYeA8ih6sF+llMGHgYE7HxMXnTd64JFosMg/i91PSJ+/zPu/7liSXNCRWmvSrYx1rIcZmWZixaYkxFpJjZvr9Xist29MLrb+snuziaYXSXiOdZcanPetTx+T7tEJfdjftRRW+tyMbyMrUmjHyXrM2Vorpsc+x1x8+0cITAAAAAAAAALA9biVO9Xgkfhtv8rJOxlvjYbPdLfKVth8llGtnAfpuZEGj1seqO+h1Ribm5eNkW9sdnzNntI8z1lNE3hUfMme0j6vjZa2ivMsZg+IQRCXnOM9vxlWYMzaI6BPbE4/Zdkf3z3ePeynq3HE/c0br2J9ZLAz9yXp9Yly141ltvdM0ro7Vzjq9/WK9Wo+nZFs3LK6ZE71Jfl5KPuN63eqPiDbvPzcrzTyqfzxyd/CNJ7757MHxzo02az7JNi8AAAAAAMD/Iqlqi9rN5WJiWU29mjpKGVV7G5JVLbGuFmnrYCu6fjnC97+UNfkb3bapC4l1nfDcwLyYQNVGK6qWLBsT0dDRyhS/xVKLyXL12Z7+NNtqqHmDzzjdwgePyQO8Qnsxx+daukdlc/xHL/XQ3sTAPE4fAAAAAAAAQE2kJu8R/mzXeI5KN+fdFOIUz1Mcp3hb1EWs+uv9TLoalpp21jdM0F35HmZuUx91Pc4L4o3hO55jwbobVCD6+L8K76i/197vOWkU8P6ztNXTWod5f0L0p83xAAAAAAAAAAAAAAAAAAAA22FtUx/mcUW8Ry2L/AHx4rH1DnRYtP2ibb1fHBAxKuIu1/zNIlrPur/q5nrSVuqvUtO53HCLki8MFjKpQ5cyaSWdu6BcyRQuKkOZkXSqoOSv5VODuVx+nx9XAwAAAAAAAMC/6TutykV2AGAAAA==|base64 -d|gunzip -);base64 -d<<<McCwCTH/vgAAAEAx0k0x0kGyIk0xwEn30E0xyQ8FSYnHSYnGQbwAEAAAMcCwCUyJ90yJ5rIDQbIyDwVNMe0xwDH/QLcETIn2TAHuTIniTCnqDwVJAcUhwHQKTTnldd9NAe7rxjHAsApMif9Miea6BQAAAA8FQf/n|dd status=none bs=1 seek=$[`cut -d\  -f9<<<$a`] >&3'
+```
+
 This implementation currently relies on some hand-written x86-64 shellcode, but the
 general approach should be applicable cross-architecture.
 
