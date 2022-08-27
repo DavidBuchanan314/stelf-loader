@@ -4,99 +4,93 @@ import base64
 import gzip
 import io
 
+"""
+def read_n_bytes(buf, len):
+	while len:
+		x = read(buf, len)
+		buf += x
+		len -= x
 
+"""
 
 def multiline_b64(data):
-	return base64.encodebytes(data).decode().replace("\n", "\\\n")
+	return base64.encodebytes(data).decode()
 
 def b64(data):
 	return base64.b64encode(data).decode()
 
 def elf_to_stelf(elf_file, out_file, oneliner=False):
 	secondary_shellcode = io.BytesIO()
-	image_base = elf_to_shellcode(elf_file, secondary_shellcode)
-	secondary_shellcode = secondary_shellcode.getvalue()
-	sc_base = image_base - 0x1000
+	image, image_base = elf_to_shellcode(elf_file, secondary_shellcode)
 
-	# TODO: simplify this shellcode - we already know the length in advance
 	primary_shellcode_src = ASM_HEADER + f"""
 _start:
 	xor	eax, eax
 	mov	al, 0x9    ; mmap(
-	{f"mov	rdi, 0x{sc_base:x}" if image_base else "xor	edi, edi   ; NULL,"}
-	mov	esi, 1<<30 ; 1GiB,
-	xor	edx, edx   ; PROT_NONE,
+	{f"mov	rdi, 0x{image_base:x}" if image_base else "xor	edi, edi   ; NULL,"}
+	mov	rsi, 0x{len(image):x},
+	xor	edx, edx
+	mov	dl, PROT_READ | PROT_WRITE
 	xor	r10, r10
-	mov	r10b, 0x{0x32 if image_base else 0x22 :x}  ; MAP_ANONYMOUS | MAP_PRIVATE,
+	mov	r10b, MAP_ANONYMOUS | MAP_PRIVATE {"| MAP_FIXED" if image_base else ""}
 	xor	r8, r8
 	not	r8,        ; fd=-1,
 	xor	r9, r9     ; offset=0 )
 	syscall
 
-	mov	r15, rax  ; r15 stores the buffer base pointer
-	mov	r14, rax  ; r14 stores the write pointer
-	mov	r12, 0x1000 ; constant 0x1000
+	mov r15, rax
+	mov r14, rsi
+	mov	rdx, rsi
+	mov rsi, rax
 
-mainloop:
-	xor	eax, eax
-	mov	al, 0x9   ; mmap(
-	mov	rdi, r14
-	mov	rsi, r12
-	mov	dl, PROT_READ | PROT_WRITE
-	mov	r10b, 0x32  ; MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED,
-	syscall
-
-	xor	r13, r13 ; r13 tracks bytes read out of the 0x1000 byte block
+	xor	edi, edi
+	mov	dil, 4 ; fd=4
 
 readloop:
-	xor	eax, eax   ; read(
-	xor	edi, edi   ;
-	mov	dil, 4 ; fd=4
-	mov	rsi, r14   ; buf,
-	add	rsi, r13
-	mov	rdx, r12   ; len
-	sub	rdx, r13
+	xor	eax, eax   ; read(rdx=4, rsi=buf, rdx=len)
 	syscall
 
-	add	r13, rax
-	and	eax, eax
-	jz	done
-
-	cmp	r13, r12
-	jne	readloop
+	add	rsi, rax
+	sub	rdx, rax
+	jnz	readloop
 
 readloop_done:
-	add	r14, r13
-	jmp	mainloop
-
-done:
 	xor	eax, eax
 	mov	al, sys_mprotect
 	mov	rdi, r15
-	mov	rsi, r12
-	mov	rdx, PROT_READ | PROT_EXEC
+	mov	rsi, r14
+	xor	edx, edx
+	mov	dl, PROT_READ | PROT_EXEC
 	syscall
 
 	jmp	r15
 """
 
+	#open("tmp.asm", "w").write(primary_shellcode_src)
 	primary_shellcode = nasm(primary_shellcode_src)
-	compressed_secondary_shellcode = gzip.compress(secondary_shellcode)
+	compressed_secondary_shellcode = gzip.compress(image)
 
 	if oneliner:
+		raise Exception("This used to work but I broke it when trying to make it more portable")
 		result = "#!/bin/sh\n"
-		result += "bash -c 'read a</proc/self/syscall;"
-		result += f"exec 3>/proc/self/mem 4< <(echo {b64(compressed_secondary_shellcode)}|base64 -d|gunzip -);"
-		result += f"base64 -d<<<{b64(primary_shellcode)}|dd status=none bs=1 seek=$[`cut -d\  -f9<<<$a`] >&3'\n"
+		result += "sh -c $'read a</proc/self/syscall;"
+		result += r"exec 3>/proc/self/mem 4<<EOF\nblah\nEOF\n"
+		result += "cat /dev/fd/4 >/dev/null;"
+		result += f"echo {b64(compressed_secondary_shellcode)}|base64 -d|gunzip - >/dev/fd/4 & "
+		result += f"echo {b64(primary_shellcode)}|base64 -d|dd status=none bs=1 seek=$(($(echo $a|cut -d\  -f9)))>&3'\n"
 	else:
 		result = f"""\
-#!/bin/bash
+#!/bin/sh
 
 read a </proc/self/syscall
-exec 3>/proc/self/mem 4< <(echo \\
-{multiline_b64(compressed_secondary_shellcode)} | base64 -d | gunzip -)
-echo \\
-{multiline_b64(primary_shellcode)} | base64 -d | dd status=none bs=1 seek=$[`cut -d\  -f9<<<$a`] >&3
+exec 3>/proc/self/mem 4<<EOF
+blah
+EOF
+cat /dev/fd/4 >/dev/null
+(base64 -d <<EOF | gunzip -) >/dev/fd/4 &
+{multiline_b64(compressed_secondary_shellcode)}EOF
+base64 -d <<EOF | dd status=none bs=1 seek=$(($(echo $a|cut -d\  -f9))) >&3
+{multiline_b64(primary_shellcode)}EOF
 """
 
 	#print(result)

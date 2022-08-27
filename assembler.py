@@ -20,6 +20,10 @@ PROT_READ  equ 0x1
 PROT_WRITE equ 0x2
 PROT_EXEC  equ 0x4
 
+MAP_FIXED     equ	0x10		;/* Interpret addr exactly */
+MAP_ANONYMOUS equ	0x20		;/* don't use a file */
+MAP_PRIVATE   equ	0x02
+
 AT_NULL    equ 0	;/* end of vector */
 AT_PHDR    equ 3	;/* program headers for program */
 AT_PHENT   equ 4	;/* size of program header entry */

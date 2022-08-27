@@ -69,12 +69,12 @@ def flags_to_prot(flags):
 
 	return " | ".join(words)
 
-def elf_to_shellcode(elf_file, shellcode_out_file, verbose=True):
+def elf_to_shellcode(elf_file, verbose=True):
 	elf = ELFFile(elf_file)
 	asm_source = io.StringIO()
 	asm_source.write(ASM_HEADER + "\n_start:\n")
 
-	image_base = next(seg.header.p_vaddr for seg in elf.iter_segments() if seg.header.p_type == "PT_LOAD")
+	image_base = min(seg.header.p_vaddr for seg in elf.iter_segments() if seg.header.p_type == "PT_LOAD")
 
 	if verbose:
 		print("[+] ELF Image base: ", hex(image_base))
@@ -125,7 +125,10 @@ def elf_to_shellcode(elf_file, shellcode_out_file, verbose=True):
 
 	asm_source.write(f"""
 
-	push	0 ; possibly unnecessary stack alignment
+	;push	0 ; possibly unnecessary stack alignment
+	push	0x41 ; argv[0]
+	mov		r15, rsp
+	push	0 ;alignment
 
 	push	0
 	push	AT_NULL
@@ -150,7 +153,8 @@ def elf_to_shellcode(elf_file, shellcode_out_file, verbose=True):
 
 	push	0 ; end envp
 	push	0 ; end argv
-	push	0 ; argc
+	push	r15
+	push	1 ; argc
 
 	xor	eax, eax
 	xor	edi, edi
@@ -172,15 +176,19 @@ incbin "{image_file.name}"
 		print()
 		print(asm_source.getvalue())
 
-	shellcode_out_file.write(nasm(asm_source.getvalue()))
+	image = nasm(asm_source.getvalue())
 
 	# useful for testing
 	#os.system(f"nasm {asm_source_file.name} -f elf64 -o shellcode.o && gcc shellcode.o -o shellcode.elf -nostdlib -static-pie")
 
-	return image_base
+	whole_image_base = image_base + len(mapper.mem) - len(image) if image_base else None
+
+	return image, whole_image_base
 
 
 if __name__ == "__main__":
 	import sys
 
-	elf_to_shellcode(open(sys.argv[1], "rb"), open(sys.argv[2], "wb"))
+	image, image_base = elf_to_shellcode(open(sys.argv[1], "rb"))
+	with open(sys.argv[2], "wb") as out_file:
+		out_file.write(image)
