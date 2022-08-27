@@ -10,8 +10,7 @@ bash -c 'read a</proc/self/syscall;exec 3>/proc/self/mem 4< <(echo H4sIAElPCWMC/
 This implementation currently relies on some hand-written x86-64 shellcode, but the
 general approach should be applicable cross-architecture.
 
-The current implementation only works `static-pie` ELFs.
-It should also be possible to work with non-pie static ELFs, but dynamic ELFs are out of scope for this project.
+The current implementation works on both `static` and `static-pie` ELFs. However, dynamic ELFs are out of scope for this project.
 
 ## Bash self-injecting shellcode loader
 

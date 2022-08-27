@@ -4,16 +4,30 @@ import base64
 import gzip
 import io
 
-# TODO: simplify this shellcode - we already know the length in advance
-primary_shellcode_src = ASM_HEADER + """
+
+
+def multiline_b64(data):
+	return base64.encodebytes(data).decode().replace("\n", "\\\n")
+
+def b64(data):
+	return base64.b64encode(data).decode()
+
+def elf_to_stelf(elf_file, out_file, oneliner=False):
+	secondary_shellcode = io.BytesIO()
+	image_base = elf_to_shellcode(elf_file, secondary_shellcode)
+	secondary_shellcode = secondary_shellcode.getvalue()
+	sc_base = image_base - 0x1000
+
+	# TODO: simplify this shellcode - we already know the length in advance
+	primary_shellcode_src = ASM_HEADER + f"""
 _start:
 	xor	eax, eax
 	mov	al, 0x9    ; mmap(
-	xor	edi, edi   ; NULL,
+	{f"mov	rdi, 0x{sc_base:x}" if image_base else "xor	edi, edi   ; NULL,"}
 	mov	esi, 1<<30 ; 1GiB,
 	xor	edx, edx   ; PROT_NONE,
 	xor	r10, r10
-	mov	r10b, 0x22  ; MAP_ANONYMOUS | MAP_PRIVATE,
+	mov	r10b, 0x{0x32 if image_base else 0x22 :x}  ; MAP_ANONYMOUS | MAP_PRIVATE,
 	xor	r8, r8
 	not	r8,        ; fd=-1,
 	xor	r9, r9     ; offset=0 )
@@ -66,35 +80,23 @@ done:
 	jmp	r15
 """
 
-SMALL_SHELLCODE = nasm(primary_shellcode_src)
-
-def multiline_b64(data):
-	return base64.encodebytes(data).decode().replace("\n", "\\\n")
-
-def b64(data):
-	return base64.b64encode(data).decode()
-
-def elf_to_stelf(elf_file, out_file, oneliner=False):
-	big_shellcode = io.BytesIO()
-	elf_to_shellcode(elf_file, big_shellcode)
-
-	big_shellcode.seek(0)
-	compressed_shellcode = gzip.compress(big_shellcode.getvalue())
+	primary_shellcode = nasm(primary_shellcode_src)
+	compressed_secondary_shellcode = gzip.compress(secondary_shellcode)
 
 	if oneliner:
 		result = "#!/bin/sh\n"
 		result += "bash -c 'read a</proc/self/syscall;"
-		result += f"exec 3>/proc/self/mem 4< <(echo {b64(compressed_shellcode)}|base64 -d|gunzip -);"
-		result += f"base64 -d<<<{b64(SMALL_SHELLCODE)}|dd status=none bs=1 seek=$[`cut -d\  -f9<<<$a`] >&3'\n"
+		result += f"exec 3>/proc/self/mem 4< <(echo {b64(compressed_secondary_shellcode)}|base64 -d|gunzip -);"
+		result += f"base64 -d<<<{b64(primary_shellcode)}|dd status=none bs=1 seek=$[`cut -d\  -f9<<<$a`] >&3'\n"
 	else:
 		result = f"""\
 #!/bin/bash
 
 read a </proc/self/syscall
 exec 3>/proc/self/mem 4< <(echo \\
-{multiline_b64(compressed_shellcode)} | base64 -d | gunzip -)
+{multiline_b64(compressed_secondary_shellcode)} | base64 -d | gunzip -)
 echo \\
-{multiline_b64(SMALL_SHELLCODE)} | base64 -d | dd status=none bs=1 seek=$[`cut -d\  -f9<<<$a`] >&3
+{multiline_b64(primary_shellcode)} | base64 -d | dd status=none bs=1 seek=$[`cut -d\  -f9<<<$a`] >&3
 """
 
 	#print(result)

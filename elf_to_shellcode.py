@@ -12,7 +12,7 @@ class Mapper():
 		self.mem = bytearray()
 		self.flags = []
 		self.align = align
-		self.base = 0
+		self.base = base
 	
 	def map(self, start, data, flags):
 		start -= self.base
@@ -72,16 +72,18 @@ def flags_to_prot(flags):
 def elf_to_shellcode(elf_file, shellcode_out_file, verbose=True):
 	elf = ELFFile(elf_file)
 	asm_source = io.StringIO()
-
 	asm_source.write(ASM_HEADER + "\n_start:\n")
 
+	image_base = next(seg.header.p_vaddr for seg in elf.iter_segments() if seg.header.p_type == "PT_LOAD")
+
 	if verbose:
+		print("[+] ELF Image base: ", hex(image_base))
 		print("[+] ELF Entry: ", hex(elf.header.e_entry))
 		print()
 		print("[+] ELF segments:")
 		print("\tType             Offset     VAddr      FileSize   MemSize    Prot")
 	
-	mapper = Mapper()
+	mapper = Mapper(base=image_base)
 
 	for seg in elf.iter_segments():
 		if verbose:
@@ -111,7 +113,7 @@ def elf_to_shellcode(elf_file, shellcode_out_file, verbose=True):
 		asm_source.write(f"""
 	xor	eax, eax
 	mov	al, sys_mprotect
-	lea	rdi, [rel imagebase + 0x{start:x}]
+	lea	rdi, [rel imagebase + 0x{start - image_base:x}]
 	mov	rsi, 0x{length:x}
 	mov	rdx, {flags_to_prot(flags)}
 	syscall
@@ -135,7 +137,7 @@ def elf_to_shellcode(elf_file, shellcode_out_file, verbose=True):
 	push	rax
 	push	AT_RANDOM
 
-	lea	rax, [rel imagebase + 0x{elf.header.e_entry:x}]
+	lea	rax, [rel imagebase + 0x{elf.header.e_entry - image_base:x}]
 	push	rax
 	push	AT_ENTRY
 
@@ -155,7 +157,7 @@ def elf_to_shellcode(elf_file, shellcode_out_file, verbose=True):
 	xor	esi, esi
 	xor	edx, edx
 
-	jmp	imagebase + 0x{elf.header.e_entry:x}
+	jmp	imagebase + 0x{elf.header.e_entry - image_base:x}
 
 
 
@@ -174,6 +176,8 @@ incbin "{image_file.name}"
 
 	# useful for testing
 	#os.system(f"nasm {asm_source_file.name} -f elf64 -o shellcode.o && gcc shellcode.o -o shellcode.elf -nostdlib -static-pie")
+
+	return image_base
 
 
 if __name__ == "__main__":
