@@ -24,7 +24,7 @@ _start:
 	xor	edx, edx
 	mov	dl, PROT_READ | PROT_WRITE
 	xor	r10, r10
-	mov	r10b, MAP_ANONYMOUS | MAP_PRIVATE {"| MAP_FIXED" if image_base else ""}
+	mov	r10b, MAP_ANONYMOUS | MAP_PRIVATE{" | MAP_FIXED" if image_base else ""}
 	xor	r8, r8
 	not	r8,        ; fd=-1,
 	xor	r9, r9     ; offset=0 )
