@@ -11,9 +11,8 @@ def multiline_b64(data):
 def b64(data):
 	return base64.b64encode(data).decode()
 
-def elf_to_stelf(elf_file, out_file, oneliner=False):
-	secondary_shellcode = io.BytesIO()
-	image, image_base = elf_to_shellcode(elf_file, secondary_shellcode)
+def elf_to_stelf(elf_file, out_file, oneliner=False, raw_entry=False, verbose=True):
+	image, image_base = elf_to_shellcode(elf_file, raw_entry=raw_entry, verbose=verbose)
 
 	primary_shellcode_src = ASM_HEADER + f"""
 _start:
@@ -65,16 +64,7 @@ readloop_done:
 	primary_shellcode = nasm(primary_shellcode_src)
 	compressed_secondary_shellcode = gzip.compress(image)
 
-	if oneliner:
-		raise Exception("This used to work but I broke it when trying to make it more portable")
-		result = "#!/bin/sh\n"
-		result += "sh -c $'read a</proc/self/syscall;"
-		result += r"exec 3>/proc/self/mem 4<<EOF\nblah\nEOF\n"
-		result += "cat /dev/fd/4 >/dev/null;"
-		result += f"echo {b64(compressed_secondary_shellcode)}|base64 -d|gunzip - >/dev/fd/4 & "
-		result += f"echo {b64(primary_shellcode)}|base64 -d|dd status=none bs=1 seek=$(($(echo $a|cut -d\  -f9)))>&3'\n"
-	else:
-		result = f"""\
+	result = f"""\
 #!/bin/sh
 
 read a </proc/self/syscall
@@ -82,17 +72,31 @@ exec 3>/proc/self/mem 4<<EOF
 blah
 EOF
 cat /dev/fd/4 >/dev/null
-base64 -d <<EOF | gunzip - >/dev/fd/4 &
+base64 -d <<EOF | gunzip >/dev/fd/4 &
 {multiline_b64(compressed_secondary_shellcode)}EOF
 base64 -d <<EOF | dd status=none bs=1 seek=$(($(echo $a|cut -d\  -f9))) >&3
 {multiline_b64(primary_shellcode)}EOF
 """
+
+	if oneliner:
+		result = f"echo {b64(gzip.compress(result.encode()))}|base64 -d|gunzip|/bin/sh\n"
 
 	#print(result)
 
 	out_file.write(result)
 
 if __name__ == "__main__":
-	import sys
+	import argparse
 
-	elf_to_stelf(open(sys.argv[1], "rb"), open(sys.argv[2], "w"), len(sys.argv) == 4 and sys.argv[3] == "oneliner")
+	parser = argparse.ArgumentParser("elf_to_stelf")
+	parser.add_argument("elf")
+	parser.add_argument("dest")
+	parser.add_argument("-r", "--raw_entry", action="store_true")
+	parser.add_argument("-o", "--oneliner", action="store_true", help="wrap everything as a oneliner")
+	parser.add_argument("-v", "--verbose", action="store_true")
+
+	args = parser.parse_args()
+
+	with open(args.elf, "rb") as elf:
+		with open("/dev/stdout" if args.dest == "-" else args.dest, "w") as dest:
+			elf_to_stelf(elf, dest, oneliner=args.oneliner, raw_entry=args.raw_entry, verbose=args.verbose)

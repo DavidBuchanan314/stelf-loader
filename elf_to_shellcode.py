@@ -69,7 +69,7 @@ def flags_to_prot(flags):
 
 	return " | ".join(words)
 
-def elf_to_shellcode(elf_file, verbose=True):
+def elf_to_shellcode(elf_file, raw_entry=False, verbose=True):
 	elf = ELFFile(elf_file)
 	asm_source = io.StringIO()
 	asm_source.write(ASM_HEADER + "\n_start:\n")
@@ -110,6 +110,7 @@ def elf_to_shellcode(elf_file, verbose=True):
 		if verbose:
 			print(f"\t0x{start:08x} 0x{length:08x} {flags_to_string(flags)}")
 		
+		# TODO: have the loop in ASM, reading from a table?
 		asm_source.write(f"""
 	xor	eax, eax
 	mov	al, sys_mprotect
@@ -123,7 +124,8 @@ def elf_to_shellcode(elf_file, verbose=True):
 	image_file.write(mapper.mem)
 	image_file.flush()
 
-	asm_source.write(f"""
+	if not raw_entry:
+		asm_source.write(f"""
 
 	;push	0 ; possibly unnecessary stack alignment
 	push	0x41 ; argv[0]
@@ -160,6 +162,9 @@ def elf_to_shellcode(elf_file, verbose=True):
 	xor	edi, edi
 	xor	esi, esi
 	xor	edx, edx
+""")
+
+	asm_source.write(f"""
 
 	jmp	imagebase + 0x{elf.header.e_entry - image_base:x}
 
@@ -187,8 +192,17 @@ incbin "{image_file.name}"
 
 
 if __name__ == "__main__":
-	import sys
+	import argparse
 
-	image, image_base = elf_to_shellcode(open(sys.argv[1], "rb"))
-	with open(sys.argv[2], "wb") as out_file:
-		out_file.write(image)
+	parser = argparse.ArgumentParser("elf_to_shellcode")
+	parser.add_argument("elf")
+	parser.add_argument("dest")
+	parser.add_argument("-r", "--raw_entry", action="store_true", help="Do not put argv/env/auxv on the stack before calling the entrypoint")
+	parser.add_argument("-v", "--verbose", action="store_true")
+
+	args = parser.parse_args()
+
+	with open(args.elf, "rb") as elf:
+		image, image_base = elf_to_shellcode(elf, raw_entry=args.raw_entry, verbose=args.verbose)
+		with open(args.dest, "wb") as out_file:
+			out_file.write(image)
