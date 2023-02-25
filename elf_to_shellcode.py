@@ -69,7 +69,13 @@ def flags_to_prot(flags):
 
 	return " | ".join(words)
 
-def elf_to_shellcode(elf_file, raw_entry=False, verbose=True):
+def elf_to_shellcode(elf_file, argv=[b"X"], raw_entry=False, verbose=True):
+	argv_buf = b""
+	argv_offsets = []
+	for arg in argv:
+		argv_offsets.append(len(argv_buf))
+		argv_buf += arg + b"\0"
+
 	elf = ELFFile(elf_file)
 	asm_source = io.StringIO()
 	asm_source.write(ASM_HEADER + "\n_start:\n")
@@ -128,8 +134,8 @@ def elf_to_shellcode(elf_file, raw_entry=False, verbose=True):
 		asm_source.write(f"""
 
 	;push	0 ; possibly unnecessary stack alignment
-	push	0x41 ; argv[0]
-	mov		r15, rsp
+	;push	0x41 ; argv[0]
+	;mov		r15, rsp
 	push	0 ;alignment
 
 	push	0
@@ -155,8 +161,19 @@ def elf_to_shellcode(elf_file, raw_entry=False, verbose=True):
 
 	push	0 ; end envp
 	push	0 ; end argv
-	push	r15
-	push	1 ; argc
+""")
+		if argv:
+			asm_source.write(f"""
+	lea	rax, [rel argv + {argv_offsets[-1]}]
+	push	rax
+""")
+		for a, b in zip(argv_offsets[-2::-1], argv_offsets[-1::-1]):
+			asm_source.write(f"""
+	sub	rax, {b - a}
+	push	rax
+""")
+		asm_source.write(f"""
+	push	{len(argv)} ; argc
 
 	xor	eax, eax
 	xor	edi, edi
@@ -168,8 +185,16 @@ def elf_to_shellcode(elf_file, raw_entry=False, verbose=True):
 
 	jmp	imagebase + 0x{elf.header.e_entry - image_base:x}
 
+""")
 
+	if argv:
+		asm_source.write(f"""
+argv:
+db {', '.join(str(x) for x in argv_buf)}
 
+""")
+	
+	asm_source.write(f"""
 align	0x1000
 imagebase:
 incbin "{image_file.name}"
@@ -199,10 +224,11 @@ if __name__ == "__main__":
 	parser.add_argument("dest")
 	parser.add_argument("-r", "--raw_entry", action="store_true", help="Do not put argv/env/auxv on the stack before calling the entrypoint")
 	parser.add_argument("-v", "--verbose", action="store_true")
+	parser.add_argument("-a", "--argv", action="append", default=[], help="args to be passed to argv (can be repeated)")
 
 	args = parser.parse_args()
 
 	with open(args.elf, "rb") as elf:
-		image, image_base = elf_to_shellcode(elf, raw_entry=args.raw_entry, verbose=args.verbose)
+		image, image_base = elf_to_shellcode(elf, argv=[x.encode() for x in args.argv], raw_entry=args.raw_entry, verbose=args.verbose)
 		with open(args.dest, "wb") as out_file:
 			out_file.write(image)

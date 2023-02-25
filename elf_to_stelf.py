@@ -11,8 +11,8 @@ def multiline_b64(data):
 def b64(data):
 	return base64.b64encode(data).decode()
 
-def elf_to_stelf(elf_file, out_file, oneliner=False, raw_entry=False, verbose=True):
-	image, image_base = elf_to_shellcode(elf_file, raw_entry=raw_entry, verbose=verbose)
+def elf_to_stelf(elf_file, out_file, argv=[b"X"], oneliner=False, raw_entry=False, verbose=True):
+	image, image_base = elf_to_shellcode(elf_file, argv=argv, raw_entry=raw_entry, verbose=verbose)
 
 	primary_shellcode_src = ASM_HEADER + f"""
 _start:
@@ -95,9 +95,10 @@ if __name__ == "__main__":
 	parser.add_argument("-r", "--raw_entry", action="store_true")
 	parser.add_argument("-o", "--oneliner", action="store_true", help="wrap everything as a oneliner")
 	parser.add_argument("-v", "--verbose", action="store_true")
+	parser.add_argument("-a", "--argv", action="append", default=[], help="args to be passed to argv (can be repeated)")
 
 	args = parser.parse_args()
 
 	with open(args.elf, "rb") as elf:
 		with open("/dev/stdout" if args.dest == "-" else args.dest, "w") as dest:
-			elf_to_stelf(elf, dest, oneliner=args.oneliner, raw_entry=args.raw_entry, verbose=args.verbose)
+			elf_to_stelf(elf, dest, argv=[x.encode() for x in args.argv], oneliner=args.oneliner, raw_entry=args.raw_entry, verbose=args.verbose)
