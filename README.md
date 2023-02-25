@@ -88,16 +88,16 @@ I wasn't aware of `DDexec` at the time, and I started writing my own tool along 
 
 After writing most of `stelf-loader`, I found `DDexec` and facepalmed - it was basically everything I set out to do with `stelf-loader`, and more. However, `stelf-loader` still does something that `DDexec` doesn't - `stelf-loader` is written in Python as opposed to shell scripting, and instead *generates* shell scripts (or one-liners) as output. The generated shell scripts are potentially very compact and can be pasted directly into a terminal session, whereas `DDexec` requires the (relatively) large ddexec shell script to be dropped onto the system first (you could work around this, but it would still take up more space).
 
-Around 12/12/2022, `arget13` discovered that several other common utilities other than `dd` could be used to seek the file descriptor, one of those alternatives being `less`. `less` is of course more commonly installed and executed than `dd`, making the overall technique more portable and less eyebrow-raising.
+Around 12/12/2022, `arget13` discovered that several other common utilities other than `dd` could be used to seek the file descriptor, one of those alternatives being `tail`. `tail` is of course more commonly installed and executed than `dd`, making the overall technique more portable and less eyebrow-raising.
 
-After noticing this change to `DDexec`, I updated `stelf-loader` to also use `less` for seeking.
+After noticing this change to `DDexec`, I updated `stelf-loader` to also use `tail` for seeking.
 
 In its current form, `stelf-loader` combines:
 
 - "The" `/proc/<pid>/mem` shellcode injection.
 - brainsmoke's fd redirection technique.
 - My own `/proc/<pid>/syscall` program counter "leak" technique.
-- arget13's `less`-seeking technique (as a sneakier alternative to `dd`)
+- arget13's `tail`-seeking technique (as a sneakier alternative to `dd`)
 
 ## `elf_to_shellcode.py`
 
