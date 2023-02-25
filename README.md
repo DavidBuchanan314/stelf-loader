@@ -1,9 +1,7 @@
 # stelf-loader
 A stealthy ELF loader - no files, no execve, no RWX
 
-I've been learning about how the ELF file format works, and this tool is the result
-of that process. It's a bit of a "solution in search of a problem",
-so if you're wondering what the point of it is, there isn't one.
+See also: [arget13/DDexec](https://github.com/arget13/DDexec), which is a similar idea to this but probably more flexible - I wrote most of `stelf-loader` before I realised that `DDexec` existed!
 
 Here's a simple "hello world" ELF (`test_elfs/syscall-static-pie.c`), packed using stelf-loader:
 
