@@ -80,7 +80,8 @@ base64 -d<<EOF>&3
 """
 
 	if oneliner:
-		result = f"echo {b64(gzip.compress(result.encode()))}|base64 -d|gunzip|/bin/sh\n"
+		stripped = "\n".join(result.split("\n")[2:]) # strip hashbang
+		result = f"echo {b64(gzip.compress(stripped.encode()))}|base64 -d|gunzip|/bin/sh\n"
 
 	#print(result)
 

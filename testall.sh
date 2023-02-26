@@ -25,7 +25,7 @@ zsh ./out.sh
 echo
 
 echo
-echo === syscall-static-pie ===
+echo === glibc-static-pie ===
 python3 elf_to_stelf.py test_elfs/glibc-static-pie out.sh -a hello -a world
 echo
 
@@ -43,4 +43,13 @@ dash ./out.sh
 echo
 echo zsh:
 zsh ./out.sh
+echo
+
+echo
+echo === oneliner === 
+python3 elf_to_stelf.py test_elfs/syscall-static-pie out.sh -r -o
+echo
+wc -c out.sh
+echo
+./out.sh
 echo
