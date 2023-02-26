@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# test artefacts
+out.sh
+
+# build artefacts
+test_elfs/glibc-static
+test_elfs/glibc-static-pie
+test_elfs/rust_helloworld
+test_elfs/syscall-static-pie
