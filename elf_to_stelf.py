@@ -62,7 +62,7 @@ readloop_done:
 
 	#open("tmp.asm", "w").write(primary_shellcode_src)
 	primary_shellcode = nasm(primary_shellcode_src)
-	compressed_secondary_shellcode = gzip.compress(image)
+	compressed_secondary_shellcode = gzip.compress(b"X" + image)
 
 	result = f"""\
 #!/bin/sh
@@ -71,10 +71,10 @@ read a </proc/self/syscall
 exec 3>/proc/self/mem 4<<EOF 5>/dev/null
 A
 EOF
-cat /dev/fd/4 >&5
 tail -c+$(($(echo $a|cut -d\  -f9)+1)) <&3 2>&5
 base64 -d<<EOF|gunzip >/dev/fd/4 &
 {multiline_b64(compressed_secondary_shellcode)}EOF
+head -c3 <&4 >&5
 base64 -d<<EOF >&3
 {multiline_b64(primary_shellcode)}EOF
 """
