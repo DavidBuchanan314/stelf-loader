@@ -51,5 +51,5 @@ python3 elf_to_stelf.py test_elfs/syscall-static-pie out.sh -r -o
 echo
 wc -c out.sh
 echo
-./out.sh
+sh ./out.sh
 echo
