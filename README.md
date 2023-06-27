@@ -29,6 +29,12 @@ McCwCTH/vgBQAAAx0rIDTTHSQbIiTTHASffQTTHJDwVJicdJifZIifJIicYx/0C3BDHADwVIhcB4
 EOF
 ```
 
+Or, as a more copy-pasteable one-liner:
+
+```sh
+echo H4sIAPoum2QC/1VSXY+iQBB851fwsDEashm+lcQ1AVEBvVMEBMm94DCDg6h8iUL2x5/rXS63/VJJVXVXJ90limI6oscgL68QVCjDoGorGGUZhR4I0sLkP+WMzrQ4Hs/Wc1qagBg14HJ7GlXqyVAwqukXh2MgTnoSVUcko98h89bvv/URPF7pt+gT3mr6Pf5F0+9YGTDcYDDuCTT/Ze8fogrJ4lN9JXwmt0tH8sHk38weZYiVqW6utzNvTwEjhBu20W0tNUZOXM9ORaBoAhsv5NywbQO03FI7xtg+nVItWS6ne+KWsm7HjHaQ54lMFWs9uQlax674TsoLFKjOisjpHdgPCRlDCO9IMNAFu1J5jBYQkZ+PpcO7ZzJLEwU2YuFzpBNFjNq9T62lYXU+EIbMlRtpZg/1Vbp4iKGxFSG37YDsCEGYeUGwbBol3MpF2u7mNdkxo8BfcUFRL7nRYa3sCkqp/ToEPpaHuVd0woVvqtyHfDRiBG6hBFHmXznYeV0oDsvSlW9V1BkduNgZo5TTP8nqhkeFMQoFikk3pbzATLRZcyUGsTtEq7IZ+UgFcGar3wpz7D5nsnDLB5I5Y8jwcnKKLlG8MLZwUSyo1vOg5BTDtrC08zksXV9cvTpNHchb3j6keqTOv4iPj9dTfL/ppCdQP+D0PnUN0CTaV/qDLU3ddQ3HPpjkiaqDsf1ES7/vLAJji+DQJNgyCdw/ADsVNN1Qn5p5hJpIKWyiPU5Jfr8EzWvwqbUA21pKajhV4m00zwDS/e8uvwGGMkYO6wIAAA==|base64 -d|gunzip|/bin/sh
+```
+
 You could put this in a file and execute it, but that would slightly defeat the
 purpose (of being file-less). The intended usage scenario is to paste it directly into a terminal,
 or perhaps even `curl | sh` or `nc | sh`. The aim is to be as portable as possible between different shell implementations. So far I've tested it against `bash`, `zsh`, `dash`, and `busybox ash`.
