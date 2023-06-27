@@ -1,5 +1,5 @@
 # stelf-loader
-A stealthy ELF loader - no files, no execve, no RWX
+A stealthy ELF loader - no files, no execve, no RWX (currently only supporting x86_64)
 
 See also: [arget13/DDexec](https://github.com/arget13/DDexec), which is a similar idea to this but probably more flexible - I wrote most of `stelf-loader` before I realised that `DDexec` existed (oops!)
 
