@@ -1,4 +1,10 @@
-# stelf-loader
+```
+__  __  __        _       _  __   _                 _              __  __  __
+\ \ \ \ \ \   ___| |_ ___| |/ _| | | ___   __ _  __| | ___ _ __   / / / / / /
+ \ \ \ \ \ \ / __| __/ _ \ | |_  | |/ _ \ / _` |/ _` |/ _ \ '__| / / / / / / 
+ / / / / / / \__ \ ||  __/ |  _| | | (_) | (_| | (_| |  __/ |    \ \ \ \ \ \ 
+/_/ /_/ /_/  |___/\__\___|_|_|   |_|\___/ \__,_|\__,_|\___|_|     \_\ \_\ \_\
+```
 A stealthy ELF loader - no files, no execve, no RWX (currently only supporting x86_64)
 
 See also: [arget13/DDexec](https://github.com/arget13/DDexec), which is a similar idea to this but probably more flexible - I wrote most of `stelf-loader` before I realised that `DDexec` existed (oops!)
