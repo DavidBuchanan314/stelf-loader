@@ -76,7 +76,7 @@ cd /proc/$$;exec 3>mem;(base64 -d<<<MdtoL2JpbkiJ54FvBNGMl/9qLcZH+WNIieBTSIni6w5Q
 
 ### Parallel idea 2:
 
-Independently, `arget13` had the idea of using `dd` to do something similar to the base technique which he called [DDexec](https://github.com/arget13/DDexec). However, not realising that `mem` allows writing to read-only pages, he came up with a wonderfully complex mechanism for injecting a ROP payload, all implemented through shell scripting.
+Independently, `arget13` had the idea of using `dd` to do something similar to the base technique which he called [DDexec](https://github.com/arget13/DDexec). However, not realising that `mem` allows writing to read-only pages, he came up with a wonderfully complex mechanism for injecting a ROP payload, all implemented through shell scripting (Edit: I might have been getting my wires crossed here, thinking of [Cexigua](https://github.com/AonCyberLabs/Cexigua) - I need to revisit this).
 
 ### Parallel idea 3:
 
